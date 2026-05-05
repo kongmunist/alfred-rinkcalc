@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>bundleid</key>
+	<string></string>
+	<key>connections</key>
+	<dict/>
+	<key>createdby</key>
+	<string></string>
+	<key>description</key>
+	<string></string>
+	<key>disabled</key>
+	<false/>
+	<key>name</key>
+	<string>Rinkcalc</string>
+	<key>objects</key>
+	<array>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<true/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>0</integer>
+				<key>escaping</key>
+				<integer>68</integer>
+				<key>keyword</key>
+				<string>r</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string></string>
+				<key>script</key>
+				<string># Python file that evaluates an input string using rink and returns the results. Rink is a CLI calculator utility
+import sys
+import os
+import json
+import re
+import shutil
+import subprocess
+
+query = sys.argv[1]
+
+candidates = [
+    os.path.join(os.getcwd(), "rink"),  # bundled with workflow
+    shutil.which("rink"),                # on PATH
+    os.path.expanduser("~/.cargo/bin/rink"),  # cargo install location
+]
+rink = next((p for p in candidates if p and os.path.isfile(p) and os.access(p, os.X_OK)), "rink")
+result = subprocess.run([rink, query], capture_output=True, text=True)
+
+ansi = re.compile(r"\x1b\[[0-9;]*m")
+out = ansi.sub("", result.stdout).strip()
+last = out.split("\n")[-1] if out else ""
+
+# Definition lookups echo as "Definition: name = value = approx. value (dim)" — keep the final segment.
+if last.startswith("Definition:") and " = " in last:
+    last = last.split(" = ")[-1]
+
+# Result lines look like "[approx. ]&lt;value&gt;[ &lt;unit&gt;] (&lt;dimension&gt;)".
+m = re.match(r"^(approx\. )?(.+?) \(([a-z][^)]*)\)\s*$", last)
+
+if m:
+    approx = m.group(1) is not None
+    value_unit = m.group(2).strip()
+    dimension = m.group(3).strip()
+    title = ("≈ " if approx else "") + value_unit
+    subtitle = f"{dimension}  ·  {query}" if dimension != "dimensionless" else query
+    copy_text = value_unit
+    valid = True
+else:
+    title = last or "Rink: no output"
+    subtitle = query
+    copy_text = last or query
+    valid = False
+
+items = [{
+    "title": title,
+    "subtitle": subtitle,
+    "valid": valid,
+    "arg": copy_text,
+    "text": {"copy": copy_text, "largetype": title},
+}]
+output = {"items": items}
+json.dump(output, sys.stdout)
+
+
+</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>Unit-Aware Scientific Calculator</string>
+				<key>title</key>
+				<string>Rink Calculator</string>
+				<key>type</key>
+				<integer>9</integer>
+				<key>withspace</key>
+				<true/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>86164F1D-8CBA-4609-92FF-E024A20553F6</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+	</array>
+	<key>readme</key>
+	<string></string>
+	<key>uidata</key>
+	<dict>
+		<key>86164F1D-8CBA-4609-92FF-E024A20553F6</key>
+		<dict>
+			<key>xpos</key>
+			<real>45</real>
+			<key>ypos</key>
+			<real>245</real>
+		</dict>
+	</dict>
+	<key>userconfigurationconfig</key>
+	<array/>
+	<key>webaddress</key>
+	<string></string>
+</dict>
+</plist>
