@@ -2,6 +2,8 @@
 
 Unit-aware scientific calculator for Alfred, powered by [rink](https://rinkcalc.app).
 
+![Rinkcalc in Alfred](screenshot.png)
+
 Type `r ` followed by an expression: `r 3V*3V*100uF`, `r 60 mph to m/s`, `r sqrt(2)`, `r speed of light`, `r 1 GB to MiB`. Hit return to copy the result.
 
 ## Install
